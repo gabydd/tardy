@@ -136,10 +136,25 @@ const x64SysV = struct {
     pub const stack_count = 7;
     pub const entry = stack_count - 1;
     pub const alignment = 16;
-    extern fn tardy_swap_frame(noalias *[*]u8, noalias *[*]u8) callconv(.c) void;
 
-    comptime {
-        asm (@embedFile("asm/x86_64_sysv.asm"));
+    fn tardy_swap_frame(noalias _: *[*]u8, noalias _: *[*]u8) callconv(.C) void {
+        asm volatile (
+            \\pushq %%rbx
+            \\pushq %%r12
+            \\pushq %%r13
+            \\pushq %%r14
+            \\pushq %%r15
+            \\
+            // swap stacks
+            \\movq %%rsp, (%%rdi)
+            \\movq (%%rsi), %%rsp
+            \\
+            \\popq %%r15
+            \\popq %%r14
+            \\popq %%r13
+            \\popq %%r12
+            \\popq %%rbx
+        );
     }
 };
 
